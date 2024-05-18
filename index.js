@@ -20,16 +20,38 @@ userclient.query(`
     CREATE TABLE IF NOT EXISTS users(
     id SERIAL PRIMARY KEY,
     username VARCHAR(45) UNIQUE NOT NULL,
-    password VARCHAR(100)
+    password VARCHAR(100),
+    followers VARCHAR(45) ,
+    following VARCHAR(45) ,
+    post TEXT
     );
     `,(err,res) => {
     if(err) {
         console.log("Error in fetching details",err.stack);
-    } else {
-        console.log("asdasdasdas");
     }
 })
 
+
+async function authenticate(req,res,next) {
+    var username = req.headers.username;
+    var password = req.headers.password;
+
+    var dbusername = await userclient.query(`
+    SELECT username FROM users
+    WHERE username = ($1) AND password = ($2)
+    `,[username,password]);
+    var dbpassword = await userclient.query(`
+    SELECT password FROM users
+    WHERE username = ($1) AND password = ($2)
+    `,[username,password]);
+
+    
+    if( dbusername.rowCount>0 && dbpassword.rowCount>0 && username === dbusername.rows[0].username  &&  password === dbpassword.rows[0].password) {
+        next();
+    } else {
+        res.send("INVALID CREDENTIALS").status(403);
+    }
+}
 
 function generateToken(user) {
     var obj = {
@@ -57,12 +79,20 @@ app.post('/signup', async (req, res) => {
   
       res.status(201).json({ token });
     } catch (error) {
-      res.status(500).json({ message: 'Error creating user', error });
+        var temp = await userclient.query(
+            `SELECT username FROM users WHERE username = ($1)
+        `,[username]);
+
+        if(temp.rows.length > 0) {
+            res.send("Username already exists").status(500);
+        } else {
+            res.status(500).json({ message: 'Error creating user', error });
+        }
     }
   });
   
 
-  app.post('/login',async(req,res) => {
+  app.post('/login',async (req,res) => {
     var username = req.body.username;
     var password = req.body.password;
     userclient.query(`
@@ -81,6 +111,45 @@ app.post('/signup', async (req, res) => {
     })
   })
   
+
+app.get("/find",authenticate,async(req,res) => {
+    var username = req.query.username;
+
+   const tempd =  await userclient.query(`
+    SELECT * FROM users
+    WHERE username =($1)
+    `,[username])
+
+    if(tempd === undefined) {
+        res.send("Invalid username").status(404);
+    } else {
+        res.send(tempd.rows);
+    }
+})
+
+
+  app.post('/follow', authenticate, async (req, res) => {
+    try {
+        const username = req.body.username;
+        const follower = req.body.follower; 
+
+        if (!username || !follower) {
+            return res.status(400).json({ message: 'Username and follower are required' });
+        }
+        if(username === follower){
+            return res.status(400).json({message : 'You can not follow yourself'});
+        }
+        const query = `
+        UPDATE users SET followers = $1 WHERE username = $2 RETURNING username
+        `;
+
+        const result = await userclient.query(query, [follower, username]);
+        console.log(result)
+        res.status(200).send(`${follower} started following you`);
+    } catch (err) {
+        res.status(500).json({ message: 'Error following user', err });
+    }
+});
 
 app.listen(port,() => {
     console.log("Server listen on 3000");
