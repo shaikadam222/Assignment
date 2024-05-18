@@ -59,6 +59,23 @@ postclient.query(`
     }
 })
 
+postclient.query(`
+    CREATE TABLE IF NOT EXISTS likes (
+        id SERIAL PRIMARY KEY,
+        post_id INT REFERENCES posts(id),
+        user_id INT REFERENCES users(id),
+        UNIQUE(post_id,user_id)
+    );
+    `)
+
+postclient.query(`
+    CREATE TABLE IF NOT EXISTS comments (
+        id SERIAL PRIMARY KEY,
+        post_id INT REFERENCES posts(id),
+        user_id INT REFERENCES users(id),
+        comment TEXT
+    );
+`)
 
 async function authenticate(req,res,next) {
     var username = req.headers.username;
@@ -213,7 +230,7 @@ app.post('/upload', upload.single('media'), async (req, res) => {
 });
 
 app.get('/posts/:id/media', async (req, res) => {
-    const { id } = req.params;
+    const id = req.params.id
 
     try {
         const result = await postclient.query('SELECT media_data, media_type FROM Posts WHERE id = $1', [id]);
@@ -235,6 +252,39 @@ app.get('/posts/:id/media', async (req, res) => {
 });
 
 
+app.post('/posts/:id/like',authenticate,async(req,res) => {
+    const id = req.params.id;
+    const userId = req.body.userId;
+
+
+    try {
+        await postclient.query(`
+        INSERT INTO likes (post_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING
+        `,[id,userId]);
+
+        res.send(`${userId} Liked the post ${id}`)
+    } catch(err) {
+        console.log(err);
+        res.send("Error while liking the post").status(500);
+    }
+})
+
+app.delete('/posts/:id/dislike',authenticate,async(req,res) =>{
+     const id = req.params.id;
+     const userid = req.body.userId;
+
+     try{
+        await postclient.query(`
+        DELETE FROM likes WHERE post_id = ($1) AND user_id = ($2)
+        `,[id,userid]);
+
+        res.send(`${userid} disliked the post ${id}`);
+     } catch(err) {
+        console.log(err);
+        res.send("Error while disliking the post").status(500);
+     }
+
+})
 app.listen(port,() => {
     console.log("Server listen on 3000");
 })
