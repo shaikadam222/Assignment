@@ -14,7 +14,7 @@
   "name": "assignment",
   "description": "",
   "version": "1.0.0",
-  "main": "auth.js",
+  "main": "server.js",
   "devDependencies": {},
   "author": "",
   "license": "ISC"
