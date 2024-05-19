@@ -7,7 +7,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 const cors = require('cors')
 
-router.use('cors');
+router.use(cors());
 
 router.post('/text',authenticate,async(req,res) => {
     const username = req.headers.username;
