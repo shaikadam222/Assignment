@@ -2,6 +2,9 @@ const express = require('express');
 const { authenticate, generateToken } = require('../auth');
 const { userclient, postclient } = require('../database');
 const router = express.Router();
+const cors = require('cors')
+
+router.use('cors')
 
 router.get('/',authenticate,async(req,res) => {
     const username = req.headers.username;
