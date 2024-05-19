@@ -1,19 +1,17 @@
 const pg = require("pg");
 
 const userclient = new pg.Client ({
-    user: "postgres",
-    host: "localhost",
-    database: "assignment",
-    password: "Shaik@786",
-    port: 2000
+    connectionString: 'postgres://postgres1:779EGf7mmlrXHs2vSZRt006ufeyGiuPC@dpg-cp4m03779t8c73ei69kg-a.oregon-postgres.render.com/assignment_svq3',
+    ssl : {
+        rejectUnauthorized:false
+    }
 });
 
 const postclient = new pg.Client({
-    user: "postgres",
-    host: "localhost",
-    database: "assignment",
-    password: "Shaik@786",
-    port: 2000
+    connectionString: 'postgres://postgres1:779EGf7mmlrXHs2vSZRt006ufeyGiuPC@dpg-cp4m03779t8c73ei69kg-a.oregon-postgres.render.com/assignment_svq3',
+    ssl : {
+        rejectUnauthorized:false
+    }
 });
 
 userclient.connect();
