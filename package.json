@@ -7,5 +7,15 @@
     "multer": "^1.4.5-lts.1",
     "node": "^22.2.0",
     "pg": "^8.11.5"
-  }
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "name": "assignment",
+  "description": "",
+  "version": "1.0.0",
+  "main": "auth.js",
+  "devDependencies": {},
+  "author": "",
+  "license": "ISC"
 }
