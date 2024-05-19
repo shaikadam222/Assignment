@@ -74,9 +74,9 @@ router.post('/login', async (req, res) => {
             res.send("Error while fetching details").status(403);
         } else {
             if(data && data.rows && data.rows.length > 0) {
-                res.send("logged in successfully").status(200);
+                res.json({message : "logged in successfully"}).status(200);
             } else {
-                res.send("Invalid credentials").status(403);
+                res.json({message : "Invalid credentials"}).status(403);
             }
         }
     })
@@ -105,7 +105,7 @@ router.get('/find', authenticate, async (req, res) => {
         arr.push(res3);
 
 
-        res.send(arr).status(200)
+        res.json({message : arr}).status(200)
     } catch(err) {
         console.log(err);
         res.send("ERROR while fetching details from the db cuz to feed content").status(500);
@@ -125,10 +125,10 @@ router.post('/follow', authenticate, async (req, res) => {
         }
         const result = await userclient.query(`SELECT username FROM followers WHERE follower = ($1)`,[follower]);
         if(result && result.rowCount>0) {
-            res.send(`You are already following ${username}`);
+            res.json({message : `You are already following ${username}`});
         } else {
             await userclient.query(`INSERT INTO followers (username,follower) VALUES ($1, $2)`,[username,follower])
-            res.status(200).send(`${username} started following ${follower}`);
+            res.status(200).json({message : `${username} started following ${follower}`});
         }
 
         
@@ -152,17 +152,17 @@ router.post('/unfollow',authenticate,async(req,res) => {
         const result = await userclient.query(`SELECT username FROM followers WHERE follower = ($1)`,[follower]);
         
         if(result && result.rowCount===0) {
-            res.send(`You are not following ${username}`);
+            res.json({message : `${username} started following ${follower}`});
         } else {
             await userclient.query(`UPDATE followers SET username = NULL, follower = NULL  WHERE follower = ($1)`,[follower],(err,data) => {
                 console.log(data);
             });
 
-            res.send(`${username} have unfollowed ${follower}`).status(200)
+            res.json({message : `${username} have unfollowed ${follower}`}).status(200)
         }
     } catch(err) {
         console.log(err);
-        res.send("Error while unfollowing").status(500);
+        res.json({message : "Error while unfollowing"}).status(500);
     }
 })
 
