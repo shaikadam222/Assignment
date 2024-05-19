@@ -1,6 +1,7 @@
 const express = require('express');
 const { authenticate, generateToken } = require('../auth');
 const { userclient, postclient } = require('../database');
+const { arrayBuffer } = require('stream/consumers');
 const router = express.Router();
 
 router.get('/',authenticate,async(req,res) => {
@@ -80,24 +81,33 @@ router.post('/login', async (req, res) => {
 });
 
 router.get('/find', authenticate, async (req, res) => {
-    var username = req.query.username;
+    var username = req.headers.username;
+    var arr = [];
+    try {
+        const res2 = await postclient.query(`
+        SELECT posts.*
+        FROM posts
+        JOIN followers ON posts.username = followers.username
+        WHERE followers.follower = $1
+        `,[username]);
 
-    const tempd =  await userclient.query(`
-     SELECT * FROM users
-     WHERE username =($1)
-     `,[username])
- 
-     if(tempd === undefined) {
-         res.send("Invalid username").status(404);
-     } else {
-         console.log(tempd.rows)
-         const obj = {
-             username : tempd.rows[0].username,
-             followers : tempd.rows[0].followers,
-             following : tempd.rows[0].following
-         }
-         res.send(obj);
-     }
+        arr.push(res2.rows)
+
+        const res3 = await postclient.query(`
+        SELECT texts.*
+        FROM texts
+        JOIN followers ON texts.username = followers.username
+        WHERE followers.follower = $1
+        `,[username]);
+
+        arr.push(res3);
+
+
+        res.send(arr).status(200)
+    } catch(err) {
+        console.log(err);
+        res.send("ERROR while fetching details from the db cuz to feed content").status(500);
+    }
 });
 
 router.post('/follow', authenticate, async (req, res) => {
