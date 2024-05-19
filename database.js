@@ -5,7 +5,7 @@ const userclient = new pg.Client ({
     host: "localhost",
     database: "assignment",
     password: "Shaik@786",
-    port: 5432
+    port: 2000
 });
 
 const postclient = new pg.Client({
@@ -13,7 +13,7 @@ const postclient = new pg.Client({
     host: "localhost",
     database: "assignment",
     password: "Shaik@786",
-    port: 5432
+    port: 2000
 });
 
 userclient.connect();

@@ -1,7 +1,6 @@
 const express = require('express');
 const { authenticate, generateToken } = require('../auth');
 const { userclient, postclient } = require('../database');
-const { arrayBuffer } = require('stream/consumers');
 const router = express.Router();
 
 router.get('/',authenticate,async(req,res) => {
