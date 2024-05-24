@@ -6,32 +6,32 @@ const cors = require('cors')
 
 router.use(cors())
 
-router.get('/',authenticate,async(req,res) => {
-    const username = req.headers.username;
-    const result1 = await postclient.query(`SELECT (media_data,description) FROM posts WHERE username = ($1)`,[username]);
-    const result2 = await postclient.query(`SELECT (messages) FROM texts WHERE username = ($1)`,[username]);
-    if(result1.rowCount == 0 && result2.rowCount == 0){
-        res.send("No posts :(");
-    } else if(result1.rowCount>0){
-        try {
-            const result = await postclient.query('SELECT media_data, media_type FROM Posts');
-            if (result.rows.length > 0) {
-                const media = result.rows[0].media_data;
-                const mediaType = result.rows[0].media_type;
-                res.writeHead(200, {
-                    'Content-Type': mediaType,
-                    'Content-Length': media.length
-                });
-                res.end(media);
-            } else {
-                res.status(404).send('Media not found');
-            }
-        } catch (err) {
-            console.error(err);
-            res.status(500).send('Error retrieving media.');
-        }
-    }
-})
+// router.get('/',authenticate,async(req,res) => {
+//     const username = req.headers.username;
+//     const result1 = await postclient.query(`SELECT (media_data,description) FROM posts WHERE username = ($1)`,[username]);
+//     const result2 = await postclient.query(`SELECT (messages) FROM texts WHERE username = ($1)`,[username]);
+//     if(result1.rowCount == 0 && result2.rowCount == 0){
+//         res.send("No posts :(");
+//     } else if(result1.rowCount>0){
+//         try {
+//             const result = await postclient.query('SELECT media_data, media_type FROM Posts');
+//             if (result.rows.length > 0) {
+//                 const media = result.rows[0].media_data;
+//                 const mediaType = result.rows[0].media_type;
+//                 res.writeHead(200, {
+//                     'Content-Type': mediaType,
+//                     'Content-Length': media.length
+//                 });
+//                 res.end(media);
+//             } else {
+//                 res.status(404).send('Media not found');
+//             }
+//         } catch (err) {
+//             console.error(err);
+//             res.status(500).send('Error retrieving media.');
+//         }
+//     }
+// })
 
 router.post('/signup', async (req, res) => {
     const { username, password } = req.body;
@@ -82,7 +82,7 @@ router.post('/login', async (req, res) => {
     })
 });
 
-router.get('/find', authenticate, async (req, res) => {
+router.get('/', authenticate, async (req, res) => {
     var username = req.headers.username;
     var arr = [];
     try {
@@ -93,7 +93,9 @@ router.get('/find', authenticate, async (req, res) => {
         WHERE followers.follower = $1
         `,[username]);
 
-        arr.push(res2.rows)
+        if(res2.rowCount > 0) {
+            arr.push(res2.rows)
+        }
 
         const res3 = await postclient.query(`
         SELECT texts.*
@@ -102,9 +104,12 @@ router.get('/find', authenticate, async (req, res) => {
         WHERE followers.follower = $1
         `,[username]);
 
-        arr.push(res3);
-
-
+        if(res3.rowCount>0){
+            arr.push(res3);
+        }
+        if(arr.length == 0) {
+            var l = "Nothing to show"
+        }
         res.json({message : arr}).status(200)
     } catch(err) {
         console.log(err);
